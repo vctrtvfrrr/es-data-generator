@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import mariadb from "./mariadb";
 import { esclient } from "./elastic";
 
 const app = express();
@@ -11,6 +12,7 @@ function requestHandler() {
   router.post("/log", async (req, res) => {
     try {
       await esclient.index(req.body);
+      await mariadb.save(req.body);
       res.status(204);
     } catch (err) {
       res.status(500).json({ error: "Ocorreu um erro." });
