@@ -15,8 +15,6 @@ services:
         hard: -1
     ports:
       - "9200:9200"
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
     restart: unless-stopped
     networks:
       - elastic
@@ -36,7 +34,3 @@ services:
 networks:
   elastic:
     driver: bridge
-
-volumes:
-  esdata:
-    driver: local

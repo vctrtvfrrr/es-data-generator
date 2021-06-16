@@ -1,0 +1,20 @@
+{
+  "name": "generators",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-modules --es-module-specifier-resolution=node main.js",
+    "dev": "nodemon --exec node --experimental-modules --es-module-specifier-resolution=node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "faker": "^5.5.3",
+    "random-js": "^2.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
