@@ -1,4 +1,4 @@
-function forEachMinute(startDate, callback) {
+async function forEachMinute(startDate, callback) {
   const start = new Date(startDate);
   const end = new Date();
   for (
@@ -9,7 +9,7 @@ function forEachMinute(startDate, callback) {
     // Business hours only
     const d = loop.getDay();
     const h = loop.getHours();
-    if (d > 0 && d < 6 && h >= 9 && h < 18) callback(loop, index);
+    if (d > 0 && d < 6 && h >= 9 && h < 18) await callback(loop, index);
   }
 }
 

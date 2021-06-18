@@ -35,7 +35,17 @@ function dealFactory(eventDate, services = [], attributes = {}) {
       currency: "BRL",
     }).format(amount),
     client: faker.company.companyName(),
-    responsible: faker.name.findName(),
+    source: faker.random.arrayElement([
+      "Telefone",
+      "E-mail",
+      "Site",
+      "Publicidade",
+      "Indicação",
+      "Cliente existente",
+      "Recomendação",
+      "Loja física",
+      "Outro",
+    ]),
     recurring: faker.random.arrayElement([
       "Não se repete",
       "Mensal",

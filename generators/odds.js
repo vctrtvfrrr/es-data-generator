@@ -7,7 +7,6 @@ function odds(mode = "services") {
       newContact: 0.3,
       newCompanyContact: 0.0009,
       newProduct: 0.00003,
-      removeProduct: 0.00003,
     };
   }
 
@@ -18,7 +17,6 @@ function odds(mode = "services") {
     newContact: 0.0005,
     newCompanyContact: 0.0001,
     newProduct: 0.001,
-    removeProduct: 0.001,
   };
 }
 

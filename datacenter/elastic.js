@@ -7,7 +7,7 @@ export const esclient = new Client({
   sniffOnStart: true,
 });
 
-export async function checkConnection() {
+export async function checkElasticConnection() {
   console.log("Verificando conexão com o ElasticSearch...");
   let isConnected = false;
   while (!isConnected) {

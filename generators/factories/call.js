@@ -7,7 +7,7 @@ function callFactory(eventDate, attributes = {}) {
     "Não atendida",
   ]);
 
-  const type = faker.random.arrayElement(["Entrante", "Sainte"]);
+  const type = faker.random.arrayElement(["in", "out"]);
 
   const duration =
     status === "Atendida" ? faker.datatype.number({ min: 3, max: 3000 }) : 0;
@@ -18,12 +18,11 @@ function callFactory(eventDate, attributes = {}) {
     precision: 0.01,
   });
 
-  const cost = type === "Entrante" ? 0 : callPrice * (duration / 60);
+  const cost = type === "in" ? 0 : callPrice * (duration / 60);
 
   const data = {
-    employee: faker.name.findName(),
     phone: faker.phone.phoneNumber("+550#13#######"),
-    type: faker.random.arrayElement(["Entrante", "Sainte"]),
+    type: faker.random.arrayElement(["in", "out"]),
     status,
     duration,
     date: eventDate,
@@ -31,7 +30,6 @@ function callFactory(eventDate, attributes = {}) {
       style: "currency",
       currency: "BRL",
     }).format(cost),
-    comment: faker.lorem.sentence(),
     created_at: eventDate,
   };
 

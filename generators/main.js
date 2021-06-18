@@ -1,4 +1,5 @@
 import faker from "faker";
+import moment from 'moment'
 import { Random } from "random-js";
 import odds from "./odds";
 import API from "./services/api";
@@ -16,12 +17,12 @@ import serviceFactory from "./factories/service";
 
 const random = new Random();
 
-const foundationDate = new Date("2021-06-01 16:32:00");
+const foundationDate = new Date("1993-06-01 16:32:00");
 
-function generateBasicInformation() {
+async function generateBasicInformation() {
   // Initial company registration
   const company = companyFactory(foundationDate, { type: "Matriz" });
-  API.save("companies", company);
+  await API.save("companies", company);
   Data.companies = company;
 
   // Initial company's products
@@ -30,11 +31,11 @@ function generateBasicInformation() {
   for (let i = 0; i < numProducts; i++) {
     if (company.category === "services") {
       const service = serviceFactory(foundationDate);
-      API.save("services", service);
+      await API.save("services", service);
       Data.services = service;
     } else {
       const product = productFactory(foundationDate);
-      API.save("products", product);
+      await API.save("products", product);
       Data.products = product;
     }
   }
@@ -45,14 +46,14 @@ function generateBasicInformation() {
     const contact = contactFactory(foundationDate, {
       type: faker.random.arrayElement(["Cliente", "Fornecedor", "Parceiro"]),
     });
-    API.save("contacts", contact);
+    await API.save("contacts", contact);
     Data.contacts = contact;
   }
 
   // Initial company's companies
-  Data.contacts.forEach((c) => {
+  Data.contacts.forEach(async (c) => {
     if (["Fornecedor", "Parceiro"].includes(c.type)) {
-      API.save(
+      await API.save(
         "companies",
         companyFactory(foundationDate, {
           type: c.type,
@@ -68,7 +69,7 @@ function generateBasicInformation() {
   });
 }
 
-function newSaleInStore({ mode, index, today }) {
+async function newSaleInStore({ mode, index, today }) {
   const modeSwitch = {
     services: {
       c: "deals",
@@ -89,48 +90,45 @@ function newSaleInStore({ mode, index, today }) {
   let numCartItems = Data[modeSwitch[mode].a].length;
   if (mode === "goodies") numCartItems /= 10;
 
-  API.save(
-    modeSwitch[mode].c,
-    modeSwitch[mode].f(
-      today,
-      arrayRandom(
-        Data[modeSwitch[mode].a],
-        faker.datatype.number({ min: 1, max: numCartItems })
-      ),
-      { name: modeSwitch[mode].t }
-    )
+  const item = modeSwitch[mode].f(
+    today,
+    arrayRandom(
+      Data[modeSwitch[mode].a],
+      faker.datatype.number({ min: 1, max: numCartItems })
+    ),
+    { name: modeSwitch[mode].t }
   );
+  await API.save(modeSwitch[mode].c, item);
+  Data[modeSwitch[mode].c] = item;
   console.log(today, modeSwitch[mode].l);
 }
 
-function newPhoneCall({ mode, index, today, p }) {
+async function newPhoneCall({ mode, index, today, p }) {
   const call = callFactory(today);
-  API.save("calls", call);
   console.log(today, "Nova ligação telefônica");
 
-  // Possibility of being a new customer
-  if (
-    call.type !== "Entrante" ||
-    call.status !== "Atendida" ||
-    !random.bool(p.newContact)
-  ) {
-    console.log(today, "-- Ligação de um cliente existente");
-
-    // Purchase by phone call
-    if (random.bool(p.sale)) newSaleInStore({ mode, index, today });
-
+  // Outgoing call or not answered
+  if (call.type !== "in" || call.status !== "Atendida") {
+    await API.save("calls", call);
+    Data.calls = call;
     return;
   }
 
-  const contact = contactFactory(today, { type: "Cliente" });
-  API.save("contacts", contact);
-  console.log(today, "-- Ligação de um novo cliente");
+  let contact = {};
 
-  // Possibility of the client being a legal entity
-  if (p.newCompanyContact) {
-    API.save(
-      "companies",
-      companyFactory(today, {
+  // Possibility of being an existing customer
+  if (!random.bool(p.newContact)) {
+    contact = faker.random.arrayElement(Data.contacts);
+    console.log(today, "-- Ligação de um cliente existente");
+  } else {
+    contact = contactFactory(today, { type: "Cliente" });
+    await API.save("contacts", contact);
+    Data.contacts = contact;
+    console.log(today, "-- Ligação de um novo cliente");
+
+    // Possibility of the client being a legal entity
+    if (p.newCompanyContact) {
+      const item = companyFactory(today, {
         type: contact.type,
         phone: contact.phone,
         email: contact.email,
@@ -138,16 +136,31 @@ function newPhoneCall({ mode, index, today, p }) {
         messenger: contact.messenger,
         address: contact.address,
         contact: contact.name,
-      })
-    );
-    console.log(today, "---- O novo cliente é pessoa jurídica");
+      });
+      await API.save("companies", item);
+      Data.companies = item;
+      console.log(today, "---- O novo cliente é pessoa jurídica");
+    }
+  }
 
-    // Purchase by phone call
-    newSaleInStore({ mode, index, today });
+  call.phone = "+550" + contact.phone.replace(/[^\d]/g, "");
+  await API.save("calls", call);
+
+  // Possibility of purchase by phone call
+  if (random.bool(p.sale)) {
+    newSaleInStore({
+      mode,
+      index,
+      today: moment(today).add(call.duration, 'seconds').toDate(),
+      attrs: {
+        client: contact.name,
+        source: "Telefone",
+      },
+    });
   }
 }
 
-function newProductOrServiceInCatalog({ mode, today }) {
+async function newProductOrServiceInCatalog({ mode, today }) {
   const modeSwitch = {
     services: {
       c: "services",
@@ -161,13 +174,15 @@ function newProductOrServiceInCatalog({ mode, today }) {
     },
   };
 
-  API.save(modeSwitch[mode].c, modeSwitch[mode].f(today));
+  const item = modeSwitch[mode].f(today);
+  await API.save(modeSwitch[mode].c, item);
+  Data[modeSwitch[mode].c] = item;
   console.log(today, modeSwitch[mode].l);
 }
 
-(function main() {
+(async function main() {
   console.log("Cadastro inicial dos dados da empresa");
-  generateBasicInformation();
+  await generateBasicInformation();
 
   const myCompany = Data.myCompany();
 
@@ -177,34 +192,23 @@ function newProductOrServiceInCatalog({ mode, today }) {
 
   // For every minute since the company's founding
   console.log("Iniciando as atividades da empresa");
-  forEachMinute(foundationDate, (currentDate, index) => {
+  await forEachMinute(foundationDate, async (currentDate, index) => {
     ctx.index = index + 1;
     ctx.today = currentDate;
 
     // Possibility of sale in the physical store
     if (random.bool(p.saleInStore) && random.bool(p.sale)) {
-      newSaleInStore(ctx);
+      await newSaleInStore(ctx);
     }
 
     // Possibility of making a phone call
     if (random.bool(p.telephony)) {
-      newPhoneCall(ctx);
+      await newPhoneCall(ctx);
     }
 
     // Possibility of a new product/service entering the catalog
     if (random.bool(p.newProduct)) {
-      newProductOrServiceInCatalog(ctx);
-    }
-
-    // Possibility of a product/service leaving the catalog
-    if (random.bool(p.removeProduct)) {
-      if (myCompany.category === "services") {
-        API.save("services", serviceFactory(currentDate));
-        console.log(currentDate, "Serviço removido do catálogo");
-      } else {
-        API.save("products", productFactory(currentDate));
-        console.log(currentDate, "Produto removido do catálogo");
-      }
+      await newProductOrServiceInCatalog(ctx);
     }
   });
 })();

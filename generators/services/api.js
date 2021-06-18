@@ -9,9 +9,9 @@ const API = axios.create({
 });
 
 export default {
-  save(collection, data) {
+  async save(collection, data) {
     try {
-      API.post("/log", { index: collection, body: data });
+      await API.post("/log", { index: collection, body: data });
     } catch (error) {
       if (error.response) {
         console.log(error.response.data);

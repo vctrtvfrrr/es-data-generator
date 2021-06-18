@@ -1,4 +1,5 @@
 import mariadb from "mariadb";
+import moment from "moment";
 
 const pool = mariadb.createPool({
   host: "localhost",
@@ -6,28 +7,6 @@ const pool = mariadb.createPool({
   password: "secret",
   database: "elasticsearch",
 });
-
-function formatDate(date) {
-  if (typeof date !== "object") date = new Date(date);
-
-  let month = "" + (date.getMonth() + 1);
-  let day = "" + date.getDate();
-  let year = "" + date.getFullYear();
-  let hours = "" + date.getHours();
-  let minutes = "" + date.getMinutes();
-  let seconds = "" + date.getSeconds();
-
-  if (month.length < 2) month = "0" + month;
-  if (day.length < 2) day = "0" + day;
-  if (hours.length < 2) hours = "0" + hours;
-  if (minutes.length < 2) minutes = "0" + minutes;
-  if (seconds.length < 2) seconds = "0" + seconds;
-
-  const Ymd = [year, month, day].join("-");
-  const Hms = [hours, minutes, seconds].join(":");
-
-  return `${Ymd} ${Hms}`;
-}
 
 async function runQuery(query) {
   let conn;
@@ -82,7 +61,8 @@ async function doInsert(table, columns) {
 
     if (k === "created_at" || k.endsWith("_date")) {
       if (columns[k] !== null) {
-        values.push(`'${formatDate(columns[k])}'`);
+        const date = moment(columns[k]).format("YYYY-MM-DD HH:MM:SS");
+        values.push(`'${date}'`);
       }
     } else if (typeof columns[k] === "object") {
       values.push(`'${JSON.stringify(columns[k])}'`);

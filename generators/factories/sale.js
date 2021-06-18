@@ -33,8 +33,6 @@ function saleFactory(eventDate, products = [], attributes = {}) {
       "Loja física",
       "Outro",
     ]),
-    responsible: faker.name.findName(),
-    observers: faker.lorem.sentence(),
     products,
     created_at: eventDate,
   };

@@ -6,25 +6,11 @@ function companyFactory(eventDate, attributes = {}) {
 
   const data = {
     name: faker.company.companyName(),
-    logo: faker.system.commonFileName("jpg"),
     type: faker.random.arrayElement([
       "Cliente",
       "Fornecedor",
       "Concorrente",
       "Parceiro",
-      "Outro",
-    ]),
-    industry: faker.random.arrayElement([
-      "Tecnologia da Informação",
-      "Telecomunicações",
-      "Fábricação",
-      "Instituição Bancária",
-      "Consultoria",
-      "Instituição Financeira",
-      "Instituição Governamental",
-      "Logística/Entrega",
-      "Lazer",
-      "Organização Não Governamental",
       "Outro",
     ]),
     category: Math.random() > 0.7 ? "services" : "goodies",
@@ -39,28 +25,7 @@ function companyFactory(eventDate, attributes = {}) {
       })
     ),
     phone: faker.phone.phoneNumber("(#1) 3###-####"),
-    email: faker.internet.email(null, null, domain).toLowerCase(),
-    website: `https://www.${domain}`,
-    messenger: `@${domainWord}`,
     contact: faker.name.findName(),
-    address:
-      faker.address.streetName() +
-      ", " +
-      faker.datatype.number({ min: 5, max: 10000 }) +
-      ", " +
-      faker.address.city() +
-      " - " +
-      faker.address.stateAbbr() +
-      ", " +
-      faker.address.zipCode("#####-###"),
-    employees: faker.random.arrayElement([
-      "1-10",
-      "10-50",
-      "50-250",
-      "250-500",
-      "500+",
-    ]),
-    comment: faker.lorem.sentence(),
     created_at: eventDate,
   };
 
